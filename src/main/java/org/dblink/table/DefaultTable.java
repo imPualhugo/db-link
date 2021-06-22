@@ -45,6 +45,16 @@ public class DefaultTable<T> implements Table<T> {
     }
 
     @Override
+    public Table<T> select(T bean) {
+        return null;
+    }
+
+    @Override
+    public Table<T> select(T bean, String... arg) {
+        return null;
+    }
+
+    @Override
     public Table<T> insert(T bean) {
 //        clearSb().append("insert").append()
 

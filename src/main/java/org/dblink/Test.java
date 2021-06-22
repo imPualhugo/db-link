@@ -18,12 +18,18 @@ public class Test {
         TableManager manager = new TableManager(config);
 
         Table<Author> t = manager.getTable(Author.class,"author");
+//
+//        List<Author> list = t
+//                .select("id,userName")
+//                .where("id",5).query();
+//
+//        System.out.println(list);
 
-        List<Author> list = t
-                .select("id,userName")
-                .where("id",5).query();
-
-        System.out.println(list);
+        Author author = new Author();
+        author.setId(1);
+        author.setUserName("aaa");
+        author.setPassword("123456");
+        System.out.println(t.insert(author).getSql());
 
 
     }

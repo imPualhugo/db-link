@@ -1,14 +1,18 @@
 package org.dblink.table;
 
 import org.dblink.utils.DBUtils;
+import org.dblink.utils.TypeUtil;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import static org.dblink.utils.DBUtils.free;
 
@@ -46,17 +50,62 @@ public class DefaultTable<T> implements Table<T> {
 
     @Override
     public Table<T> select(T bean) {
-        return null;
+        return this;
     }
 
     @Override
     public Table<T> select(T bean, String... arg) {
-        return null;
+
+
+        return this;
     }
 
     @Override
     public Table<T> insert(T bean) {
-//        clearSb().append("insert").append()
+        clearSb().append("INSERT INTO ").append(table);
+
+
+        Class<?> beanClass = bean.getClass();
+
+        Field[] fields = beanClass.getDeclaredFields();
+
+
+        HashMap<String, Object> map = new HashMap<>();
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+
+            String name = field.getName();
+            Object value = TypeUtil.getFieldValue(field, bean);
+            if (null != value) {
+                map.put(name, value);
+            }
+        }
+
+        if (map.size() > 0) {
+            sb.append("(");
+            map.keySet().forEach(k -> {
+                sb.append(k).append(", ");
+            });
+            //去掉最后多余的逗号
+            sb.deleteCharAt(sb.length() - 2);
+
+            sb.append(") VALUES (");
+
+            map.values().forEach(k -> {
+                if (!(k instanceof Number)) {
+                    sb.append("'").append(k).append("'");
+                } else {
+                    sb.append(k);
+                }
+                sb.append(", ");
+            });
+            //去掉最后多余的逗号
+            sb.deleteCharAt(sb.length() - 2);
+
+            sb.append(")");
+        }
+
 
         return this;
     }
@@ -248,8 +297,15 @@ public class DefaultTable<T> implements Table<T> {
         }
         StringBuilder sb0 = new StringBuilder(strs[0]);
 
+        String almostSql = sb.toString();
 
-        if (!sb.toString().startsWith("INSERT")) {
+        //通过正则表达式匹配非update与insert语句
+        Pattern pattern = Pattern.compile("UPDATE|INSERT[\\s\\S]*", Pattern.CASE_INSENSITIVE);
+
+        boolean isUpdate = pattern.matcher(almostSql).matches();
+
+
+        if (!isUpdate) {
             sb0.append(" FROM ").append(table);
             if (strs.length >= 2) {
                 sb0.append(" WHERE ").append(strs[1]);

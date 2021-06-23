@@ -29,7 +29,10 @@ public class Test {
         author.setId(1);
         author.setUserName("aaa");
         author.setPassword("123456");
+
         System.out.println(t.insert(author).getSql());
+
+        System.out.println(t.update(author,"password").getSql());
 
 
     }

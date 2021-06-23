@@ -15,7 +15,7 @@ public interface Table<T> {
 
     Table<T> insert(T bean);
 
-    Table<T> update(T bean);
+    Table<T> update(T bean,String key);
 
     Table<T> delete(T bean);
 

@@ -3,7 +3,6 @@ package org.dblink.table;
 import org.dblink.utils.DBUtils;
 import org.dblink.utils.TypeUtil;
 
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,15 +17,15 @@ import static org.dblink.utils.DBUtils.free;
 
 public class DefaultTable<T> implements Table<T> {
 
-    private Class<T> clazz;
+    private final Class<T> clazz;
 
-    private Connection conn;
+    private final Connection conn;
 
-    private String table;
+    private final String table;
 
     private String sql = "";
 
-    private StringBuilder sb;
+    private final StringBuilder sb;
 
     private boolean hasSubQuery = false;
 
@@ -65,22 +64,7 @@ public class DefaultTable<T> implements Table<T> {
         clearSb().append("INSERT INTO ").append(table);
 
 
-        Class<?> beanClass = bean.getClass();
-
-        Field[] fields = beanClass.getDeclaredFields();
-
-
-        HashMap<String, Object> map = new HashMap<>();
-
-        for (Field field : fields) {
-            field.setAccessible(true);
-
-            String name = field.getName();
-            Object value = TypeUtil.getFieldValue(field, bean);
-            if (null != value) {
-                map.put(name, value);
-            }
-        }
+        HashMap<String, Object> map = TypeUtil.readBean(bean);
 
         if (map.size() > 0) {
             sb.append("(");
@@ -93,10 +77,10 @@ public class DefaultTable<T> implements Table<T> {
             sb.append(") VALUES (");
 
             map.values().forEach(k -> {
-                if (!(k instanceof Number)) {
-                    sb.append("'").append(k).append("'");
-                } else {
+                if (k instanceof Number) {
                     sb.append(k);
+                } else {
+                    sb.append("'").append(k).append("'");
                 }
                 sb.append(", ");
             });
@@ -110,8 +94,43 @@ public class DefaultTable<T> implements Table<T> {
         return this;
     }
 
+
     @Override
-    public Table<T> update(T bean) {
+    public Table<T> update(T bean, String key) {
+        clearSb().append("UPDATE ").append(table).append(" SET ");
+        HashMap<String, Object> map = TypeUtil.readBean(bean);
+
+        map.forEach((k, v) -> {
+            //非key才进行更新
+
+            if (!k.equals(key)) {
+                sb.append(k).append("=");
+                if (v instanceof Number) {
+                    sb.append(v);
+                } else {
+                    sb.append("'");
+                    sb.append(v);
+                    sb.append("'");
+                }
+
+                sb.append(", ");
+            }
+        });
+        sb.deleteCharAt(sb.length() - 2);
+
+        if (null != key) {
+            sb.append(" WHERE ")
+                    .append(key)
+                    .append(" = ");
+            if (map.get(key) instanceof Number) {
+                sb.append(map.get(key));
+            }else {
+                sb.append("'");
+                sb.append(map.get(key));
+                sb.append("'");
+            }
+        }
+
         return this;
     }
 
@@ -178,7 +197,6 @@ public class DefaultTable<T> implements Table<T> {
     @Override
     public <V> Table<T> innerJoin(Table<V> table) {
         sb.append(" INNER JOIN ").append(table);
-
         return this;
     }
 

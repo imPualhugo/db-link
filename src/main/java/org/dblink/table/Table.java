@@ -19,11 +19,17 @@ public interface Table<T> {
 
     Table<T> delete(T bean);
 
+    Table<T> delete();
+
+    Table<T> delete(Map<String, Object> map);
+
     Table<T> where(Map<String, Object> map);
 
     Table<T> where(String args);
 
     Table<T> where(String args, Object obj);
+
+    Table<T> from(Table<T> t);
 
     Table<T> set(Map<String, Object> map);
 
@@ -58,4 +64,6 @@ public interface Table<T> {
     String getSql();
 
     void rollback();
+
+    String getName();
 }

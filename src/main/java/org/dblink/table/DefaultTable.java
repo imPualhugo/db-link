@@ -21,7 +21,7 @@ public class DefaultTable<T> implements Table<T> {
 
     private final Connection conn;
 
-    private final String table;
+    private final String tableName;
 
     private String sql = "";
 
@@ -34,10 +34,10 @@ public class DefaultTable<T> implements Table<T> {
         return sb;
     }
 
-    DefaultTable(Class<T> clazz, Connection connection, String table) {
+    DefaultTable(Class<T> clazz, Connection connection, String tableName) {
         this.clazz = clazz;
         this.conn = connection;
-        this.table = table;
+        this.tableName = tableName;
         sb = new StringBuilder(sql);
     }
 
@@ -61,7 +61,7 @@ public class DefaultTable<T> implements Table<T> {
 
     @Override
     public Table<T> insert(T bean) {
-        clearSb().append("INSERT INTO ").append(table);
+        clearSb().append("INSERT INTO ").append(tableName);
 
 
         HashMap<String, Object> map = TypeUtil.readBean(bean);
@@ -97,7 +97,7 @@ public class DefaultTable<T> implements Table<T> {
 
     @Override
     public Table<T> update(T bean, String key) {
-        clearSb().append("UPDATE ").append(table).append(" SET ");
+        clearSb().append("UPDATE ").append(tableName).append(" SET ");
         HashMap<String, Object> map = TypeUtil.readBean(bean);
 
         map.forEach((k, v) -> {
@@ -124,7 +124,7 @@ public class DefaultTable<T> implements Table<T> {
                     .append(" = ");
             if (map.get(key) instanceof Number) {
                 sb.append(map.get(key));
-            }else {
+            } else {
                 sb.append("'");
                 sb.append(map.get(key));
                 sb.append("'");
@@ -136,8 +136,55 @@ public class DefaultTable<T> implements Table<T> {
 
     @Override
     public Table<T> delete(T bean) {
+
+
         return this;
 
+    }
+
+    @Override
+    public String getName() {
+        return this.tableName;
+    }
+
+    @Override
+    public Table<T> from(Table<T> t) {
+        sb.append(" FROM ").append(t.getName()).append(" ");
+        return this;
+    }
+
+
+    @Override
+    public Table<T> delete() {
+        clearSb().append("DELETE ");
+//                .append(" FROM ").append(tableName).append(" ");
+//
+//        if (map.size() > 0) {
+//            map.forEach((k, v) -> {
+//                sb.append(k).append(" = ");
+//                if (v instanceof Number) {
+//                    sb.append(v);
+//                } else {
+//                    sb.append("'");
+//                    sb.append(v);
+//                    sb.append("'");
+//                }
+//                sb.append(" AND ");
+//            });
+//            System.out.println("delete : " + sb);
+//            sb.deleteCharAt(sb.length() - 2);
+//            sb.deleteCharAt(sb.length() - 2);
+//            sb.deleteCharAt(sb.length() - 2);
+//            System.out.println("delete : " + sb);
+//        }
+
+        return this;
+
+    }
+
+    @Override
+    public Table<T> delete(Map<String, Object> map) {
+        return null;
     }
 
     @Override
@@ -324,7 +371,7 @@ public class DefaultTable<T> implements Table<T> {
 
 
         if (!isUpdate) {
-            sb0.append(" FROM ").append(table);
+            sb0.append(" FROM ").append(tableName);
             if (strs.length >= 2) {
                 sb0.append(" WHERE ").append(strs[1]);
             }

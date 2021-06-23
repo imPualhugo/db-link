@@ -5,7 +5,7 @@ import org.dblink.table.Table;
 import org.dblink.table.TableManager;
 import org.dblink.test.Author;
 
-import java.util.List;
+import java.util.HashMap;
 
 public class Test {
 
@@ -17,7 +17,7 @@ public class Test {
         config.setPassword("123456");
         TableManager manager = new TableManager(config);
 
-        Table<Author> t = manager.getTable(Author.class,"author");
+        Table<Author> t = manager.getTable(Author.class, "author");
 //
 //        List<Author> list = t
 //                .select("id,userName")
@@ -32,7 +32,12 @@ public class Test {
 
         System.out.println(t.insert(author).getSql());
 
-        System.out.println(t.update(author,"password").getSql());
+        System.out.println(t.update(author, "password").getSql());
+        HashMap<String,Object> map = new HashMap<>();
+
+        map.put("id", 1);
+
+        System.out.println(t.delete().where("id",1).getSql());
 
 
     }
